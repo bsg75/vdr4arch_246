@@ -16,8 +16,14 @@ depends=('gcc-libs' "vdr-api=${_vdrapi}")
 makedepends=('git')
 _plugname=${pkgbase//vdr-/}
 source=("git://projects.vdr-developer.org/vdr-plugin-streamdev.git#commit=$_gitver"
+        "streamdev-abrt-fix.patch::https://www.vdr-portal.de/index.php?attachment/41508"
+        "deadlock_fix.patch::https://github.com/ciminus/vdr-plugin-streamdev/commit/5cb384ccd636870811bb5e7e227890dbdfc04ad5.patch"
+        "avoid_parental_rating_dialogs.patch::https://github.com/ciminus/vdr-plugin-streamdev/commit/4f62ce07f14e0f85cd33b2573753a3078f81a30e.patch"
         "50-$_plugname-server.conf")
 md5sums=('SKIP'
+         '9e08825b0cb2a6cd435400d2e2c36e89'
+         '32a07c59636b3a8b57104cd64687b4a6'
+         '83afe1ef6cfcb5f6fe99e51089fb2b08'
          '8c352d8ee7401eeb34fe5ab82e791a21')
 
 pkgver() {
@@ -33,6 +39,13 @@ pkgver() {
   else
     printf "%s" $_last_release
   fi
+}
+
+prepare() {
+  cd "${srcdir}/vdr-plugin-$_plugname"
+  patch -p1 -i "$srcdir/streamdev-abrt-fix.patch"
+  patch -p1 -i "$srcdir/deadlock_fix.patch"
+  patch -p1 -i "$srcdir/avoid_parental_rating_dialogs.patch"
 }
 
 build() {
