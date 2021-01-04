@@ -1,0 +1,45 @@
+# This PKGBUILD is part of the VDR4Arch project [https://github.com/vdr4arch]
+
+# Maintainer: Christian Schuld <christian[at]sonnengesicht.de>
+pkgname=vdr-dynamite
+pkgver=0.3.0.r1.gd8aea41
+#_gitver=80817116bafde29df370b519b3485c416c37564e
+_gitver=d8aea410bd375c61338ace5891d19331bf6ab55c
+_vdrapi=2.4.6
+pkgrel=1
+pkgdesc="Dynamic DVB device for VDR"
+url="http://projects.vdr-developer.org/projects/plg-dynamite"
+arch=('x86_64' 'i686' 'arm' 'armv6h' 'armv7h')
+license=('GPL2')
+depends=('glibc' "vdr-api=${_vdrapi}")
+makedepends=('git')
+_plugname=${pkgname//vdr-/}
+source=("git+https://github.com/flensrocker/vdr-plugin-$_plugname.git#commit=$_gitver"
+	"dynamite-vdr.patch::https://www.vdr-portal.de/index.php?attachment/44644"
+        "50-$_plugname.conf")
+md5sums=('SKIP'
+         '8faae9d8bf85b2fb6311cbfb8b2fb0b2'
+         'b3e31904c5369981b6c96dce25cbbc5d')
+
+pkgver() {
+  cd "${srcdir}/vdr-plugin-$_plugname"
+  git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g;s/^v//'
+}
+
+prepare() {
+  cd "${srcdir}/vdr-plugin-$_plugname"
+  sed -i 's/#if VDRVERSNUM < 20300/#if VDRVERSNUM < 20200/g' dynamicdevice.[hc]
+  patch -p1 -i "$srcdir/dynamite-vdr.patch"
+}
+
+build() {
+  cd "${srcdir}/vdr-plugin-$_plugname"  
+  make GITTAG=''
+}
+
+package() {
+  cd "${srcdir}/vdr-plugin-$_plugname"
+  make DESTDIR="$pkgdir" install
+
+  install -Dm644 "$srcdir/50-$_plugname.conf" "$pkgdir/etc/vdr/conf.avail/50-$_plugname.conf"
+}
